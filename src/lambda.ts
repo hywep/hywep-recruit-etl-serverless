@@ -53,33 +53,44 @@ export function transformData(data: Record<string, any>): Record<string, any> {
 
         switch (newKey) {
             case "deadlineTime":
-                break;
-            case "majors":
-                break;
-            case "internshipPeriod":
-                break;
-            case "organizationSupportAmount":
-                break;
-            case "status":
-                break;
-            case "qualifications":
-                break;
-            case "interviewInfo":
-                break;
-            case "internshipDetails":
-                break;
-            case "workingHours":
-                continue;
-            case "workingDays":
-                break;
-            case "progress":
-                break;
-            case "selectionInfo":
-                break;
-            default:
+                transformedData[newKey] = normalizeDeadlineTime(value);
                 break;
         }
     }
 
     return transformedData;
+}
+
+/**
+ * Normalizes a deadline time string into a standardized format (HH:mm).
+ *
+ * The function supports various time formats such as "12시까지", "12시 30분까지", or "12:30까지".
+ * If the input does not match any of the supported patterns or is empty, it returns "24:00".
+ *
+ * @param {string} time - The input time string to be normalized.
+ * @returns {string} - The normalized time in HH:mm format.
+ */
+function normalizeDeadlineTime(time: string): string {
+    if (!time) return "24:00";
+
+    const patterns = [
+        { regex: /(\d{1,2})시까지/, format: (h: string) => `${String(h).padStart(2, "0")}:00` },
+        {
+            regex: /(\d{1,2})시\s*(\d{1,2})분까지/,
+            format: (h: string, m: string) => `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
+        },
+        {
+            regex: /(\d{1,2}):(\d{1,2})까지/,
+            format: (h: string, m: string) => `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`,
+        },
+    ];
+
+    for (const { regex, format } of patterns) {
+        const match = time.match(regex);
+        if (match) {
+            // @ts-ignore
+            return format(...match.slice(1));
+        }
+    }
+    return "24:00";
 }

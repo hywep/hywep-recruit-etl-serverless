@@ -9,6 +9,7 @@ import {handleWorkingHours, parseWorkingDays} from "./work/work";
 import {cleanGenericValue} from "./util/util";
 import {
     cleanCurrency,
+    handleInternshipName,
     handleInterviewInfo,
     parseInternshipDetails,
     parseInternshipPeriod,
@@ -76,6 +77,9 @@ export function transformData(data: Record<string, any>): Record<string, any> {
             case "internshipDetails":
                 transformedData[newKey] = parseInternshipDetails(value);
                 break;
+            case "internshipName":
+                handleInternshipName(transformedData, value);
+                break
             case "interviewInfo":
                 handleInterviewInfo(transformedData, value);
                 break;

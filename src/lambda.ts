@@ -94,6 +94,9 @@ export function transformData(data: Record<string, any>): Record<string, any> {
             case "selectionInfo":
                 transformedData[newKey] = parseSelectionInfo(value);
                 break;
+            case "id":
+                transformedData[newKey] = parseInt(value);
+                break;
             default:
                 transformedData[newKey] = cleanGenericValue(value);
                 break;

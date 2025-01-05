@@ -70,6 +70,18 @@ export function transformData(data: Record<string, any>): Record<string, any> {
             case "interviewInfo":
                 handleInterviewInfo(transformedData,value);
                 break;
+            case "organizationSupportAmount":
+                transformedData[newKey] = cleanCurrency(value);
+                break;
+            case "status":
+                transformedData[newKey] = parseStatus(value);
+                break;
+            case "workingHours":
+                handleWorkingHours(value, transformedData);
+                continue;
+            case "workingDays":
+                transformedData[newKey] = parseWorkingDays(value);
+                break;
         }
     }
 
@@ -199,6 +211,22 @@ function handleQualifications(transformedData: Record<string, any>, value: strin
 function handleInterviewInfo(transformedData: Record<string, any>, value: string) {
     const extractedValue = extractInterviewDetails(value);
     transformedData['interviewInfo'] = standardizeDates(extractedValue);
+}
+
+/**
+ * Processes and adds work start and end hours to the provided data object.
+ *
+ * The function splits the input string by the "~" separator to extract the start and end times,
+ * trims any extra whitespace, and then converts the times to ISO 8601 format using a helper function.
+ * The converted times are stored in the "data" object under the keys "workStartHour" and "workEndHour".
+ *
+ * @param {string} value - The input string representing the working hours in the format "HH:mm ~ HH:mm".
+ * @param {Record<string, any>} data - The object where the processed working hours will be stored.
+ */
+function handleWorkingHours(value: string, data: Record<string, any>) {
+    const [start, end] = value.split("~").map((time) => time.trim());
+    data["workStartHour"] = convertToISO8601(start);
+    data["workEndHour"] = convertToISO8601(end);
 }
 
 /**
@@ -491,4 +519,82 @@ function standardizeDates(parsedObject: Record<string, any>): Record<string, any
     }
 
     return parsedObject;
+}
+
+/**
+ * Cleans and extracts currency information from a given string.
+ *
+ * The function matches the input string against a regular expression to extract the period (e.g., "월", "주")
+ * and the amount in Korean Won. It returns the extracted information in an object with the period and amount as properties.
+ * If the input format is invalid, it returns a default period of "월" and an amount of 0.
+ *
+ * @param {string} value - The input string representing the currency value (e.g., "월 500,000 원").
+ * @returns {{ period: string, amount: number }} - An object containing the period and the amount.
+ */
+
+function cleanCurrency(value: string): { period: string; amount: number } {
+    const match = value.match(/^(월|주)?\s*([\d,]+)\s*원$/);
+    if (match) {
+        const period = match[1] || "월";
+        const amount = parseInt(match[2].replace(/,/g, ""), 10);
+        return { period, amount };
+    }
+    return { period: "월", amount: 0 };
+}
+
+/**
+ * Parses a string representing working days into an array of individual days.
+ *
+ * The function splits the input string by spaces and returns an array of working days.
+ *
+ * @param {string} value - The input string representing working days (e.g., "월 화 수").
+ * @returns {string[]} - An array of working days.
+ */
+function parseWorkingDays(value: string): string[] {
+    return value.split(" ");
+}
+
+/**
+ * Parses the status and determines if it indicates an open or closed status.
+ *
+ * The function checks if the input string is equal to "접수마감" (meaning "closed"). If so, it returns false,
+ * otherwise, it returns true indicating an open status.
+ *
+ * @param {string} status - The input string representing the status (e.g., "접수마감", "접수중").
+ * @returns {boolean} - True if the status indicates open, false if closed.
+ */
+function parseStatus(status: string): boolean {
+    return status.trim() !== "접수마감";
+}
+
+/**
+ * Trims the input value to remove leading and trailing whitespace.
+ *
+ * The function simply trims the input string and returns the cleaned value.
+ *
+ * @param {string} value - The input string to be cleaned.
+ * @returns {string} - The cleaned string with whitespace removed.
+ */
+function cleanGenericValue(value: string): string {
+    return value.trim();
+}
+
+/**
+ * Converts a time string into ISO 8601 format (HH:mm).
+ *
+ * The function matches the input string (e.g., "12시 30분") to extract the hour and minute, and converts them into
+ * a formatted time string in the ISO 8601 format (HH:mm). If the input format is invalid, an error is thrown.
+ *
+ * @param {string} time - The input string representing the time (e.g., "12시 30분").
+ * @returns {string} - The time in ISO 8601 format (HH:mm).
+ * @throws {Error} - Throws an error if the input time format is invalid.
+ */
+function convertToISO8601(time: string): string {
+    const match = time.match(/(\d{1,2})시\s*(\d{1,2})분/);
+    if (!match) {
+        throw new Error(`Invalid time format: ${time}`);
+    }
+    const hour = String(match[1]).padStart(2, '0');
+    const minute = String(match[2]).padStart(2, '0');
+    return `${hour}:${minute}`;
 }

@@ -67,6 +67,9 @@ export function transformData(data: Record<string, any>): Record<string, any> {
             case "internshipDetails":
                 transformedData[newKey] = parseInternshipDetails(value);
                 break;
+            case "interviewInfo":
+                handleInterviewInfo(transformedData,value);
+                break;
         }
     }
 
@@ -181,6 +184,21 @@ function handleQualifications(transformedData: Record<string, any>, value: strin
             transformedData["systemMajors"] = findRelatedMajor(qualifications.major);
         }
     }
+}
+
+/**
+ * Processes and standardizes interview information before adding it to the transformed data.
+ *
+ * The function extracts relevant interview details from the provided value and standardizes
+ * any date-related information. It then adds the processed interview information to the
+ * transformedData object under the key 'interviewInfo'.
+ *
+ * @param {Record<string, any>} transformedData - The object holding the transformed data where the result will be added.
+ * @param {string} value - The input string containing interview-related information to be processed.
+ */
+function handleInterviewInfo(transformedData: Record<string, any>, value: string) {
+    const extractedValue = extractInterviewDetails(value);
+    transformedData['interviewInfo'] = standardizeDates(extractedValue);
 }
 
 /**
@@ -376,4 +394,101 @@ function parseInternshipDetails(details: string): Record<string, string> {
     }
 
     return result;
+}
+
+/**
+ * Extracts interview-related details from an input string.
+ *
+ * The function processes the input string to extract various interview details such as interview type,
+ * application submission period, application results announcement, and final results announcement using
+ * predefined regular expressions. It removes any asterisks from the input before applying the patterns
+ * and stores the extracted values in an object.
+ *
+ * @param {string} input - The input string containing interview details to be extracted.
+ * @returns {Record<string, string>} - An object containing the extracted interview details such as
+ *                                      "interviewType", "applicationSubmissionPeriod",
+ *                                      "applicationResultsAnnouncement", and "finalResultsAnnouncement".
+ */
+function extractInterviewDetails(input: string): Record<string, string> {
+    const result: Record<string, string> = {};
+    const patterns = {
+        interviewType: /면접유형\s*:\s*([^\n]+)/,
+        applicationSubmissionPeriod: /서류\s*접수\s*기간\s*:\s*([^서류합격발표]+)/,
+        applicationResultsAnnouncement: /서류\s*합격\s*발표\s*:\s*([^면접일]+)/,
+        finalResultsAnnouncement: /최종\s*합격발표\s*:\s*([^\n]+)/,
+    };
+
+    const cleanedInput = input.replace(/\*/g, '');
+
+    for (const [key, regex] of Object.entries(patterns)) {
+        const match = cleanedInput.match(regex);
+        if (match && match[1]) {
+            result[key] = match[1].trim();
+        }
+    }
+
+    return result;
+}
+
+/**
+ * Standardizes date formats in the provided object.
+ *
+ * The function processes all string values in the given object and checks for date-like patterns.
+ * It normalizes dates to a standardized format (YYYY-MM-DD) and resolves partial dates by using the last known year.
+ * It handles three date formats: full dates (e.g., "2023.01.01"), partial dates (e.g., "01.01"), and dates with a tilde (~) prefix (e.g., "~2023.01.01").
+ *
+ * @param {Record<string, any>} parsedObject - The object containing the parsed data, where date values will be standardized.
+ * @returns {Record<string, any>} - The object with standardized date formats.
+ */
+function standardizeDates(parsedObject: Record<string, any>): Record<string, any> {
+    const fullDatePattern = /^\d{2,4}\s*\.\s*\d{2}\s*\.\s*\d{2}$/;
+    const partialDatePattern = /^\d{2}\s*\.\s*\d{2}$/;
+    const tildeDatePattern = /^~\d{2,4}\s*\.\s*\d{2}\s*\.\s*\d{2}$/;
+    const dateLikePattern = /(~?\d{2,4}\s*\.\s*\d{2}\s*\.\s*\d{2})|(~?\d{2}\s*\.\s*\d{2})/g;
+
+    let lastKnownYear = null;
+
+    for (const key in parsedObject) {
+        const value = parsedObject[key];
+        if (typeof value === "string") {
+            parsedObject[key] = value.replace(/\s*\.\s*/g, ".").trim();
+        }
+    }
+
+    for (const key in parsedObject) {
+        const value = parsedObject[key];
+        if (typeof value !== "string") continue;
+
+        const matches = value.match(dateLikePattern);
+        if (!matches) continue;
+
+        let transformedValue = value;
+        matches.forEach((match) => {
+            const normalizedMatch = match.replace(/\s*\.\s*/g, ".").trim();
+
+            let transformedDate = normalizedMatch;
+
+            if (tildeDatePattern.test(normalizedMatch)) {
+                const dateWithoutTilde = normalizedMatch.slice(1);
+                const components = dateWithoutTilde.split(".");
+                const year = components[0].length === 2 ? `20${components[0]}` : components[0];
+                transformedDate = `~${year}-${components[1]}-${components[2]}`;
+                lastKnownYear = year;
+            } else if (fullDatePattern.test(normalizedMatch)) {
+                const components = normalizedMatch.split(".");
+                const year = components[0].length === 2 ? `20${components[0]}` : components[0];
+                transformedDate = `${year}-${components[1]}-${components[2]}`;
+                lastKnownYear = year;
+            } else if (partialDatePattern.test(normalizedMatch) && lastKnownYear) {
+                const components = normalizedMatch.split(".");
+                transformedDate = `${lastKnownYear}-${components[0]}-${components[1]}`;
+            }
+
+            transformedValue = transformedValue.replace(match, transformedDate);
+        });
+
+        parsedObject[key] = transformedValue;
+    }
+
+    return parsedObject;
 }

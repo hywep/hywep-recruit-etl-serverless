@@ -61,7 +61,12 @@ export function transformData(data: Record<string, any>): Record<string, any> {
             case "qualifications":
                 handleQualifications(transformedData, value);
                 break;
-
+            case "internshipPeriod":
+                Object.assign(transformedData, parseInternshipPeriod(value));
+                break;
+            case "internshipDetails":
+                transformedData[newKey] = parseInternshipDetails(value);
+                break;
         }
     }
 
@@ -325,4 +330,50 @@ function findRelatedMajor(inputs: string[]): string[] {
         }
     }
     return Array.from(relatedData);
+}
+
+/**
+ * Parses an internship period string to extract start and end dates.
+ *
+ * The function splits the input string by the "~" separator, trims any extra whitespace,
+ * and returns an object containing the start and end dates as separate fields.
+ *
+ * @param {string} period - The input string representing the internship period (e.g., "2023-01-01 ~ 2023-06-30").
+ * @returns {Record<string, string>} - An object with "startDate" and "endDate" as string fields.
+ */
+function parseInternshipPeriod(period: string): Record<string, string> {
+    const [start, end] = period.split("~").map((v) => v.trim());
+    return { startDate: start, endDate: end };
+}
+
+/**
+ * Parses internship details from a given input string and extracts relevant information.
+ *
+ * The function matches various sections of the internship details using predefined regular
+ * expressions and stores the extracted values in an object. It looks for specific sections
+ * such as "직무명", "교육목표", "직무 개요", "운영/ 지도 계획", and "목표 성과물". Each extracted
+ * value is trimmed and added to the result object under appropriate keys.
+ *
+ * @param {string} details - The input string containing internship details to be parsed.
+ * @returns {Record<string, string>} - An object containing the parsed internship details such as job title, goals,
+ *                                      job overview, operation guidance, and target outcomes.
+ */
+function parseInternshipDetails(details: string): Record<string, string> {
+    const result: Record<string, string> = {};
+    const patterns = {
+        jobTitle: /[*]직무명\s*:\s*([\s\S]*?)(?=\n[*]교육목표|$)/,
+        goals: /[*]교육목표\s*:\s*([\s\S]*?)(?=\n[*]직무 개요|$)/,
+        jobOverview: /[*]직무\s*개요\s*:\s*([\s\S]*?)(?=\n[*]운영\/ 지도 계획|$)/,
+        operationGuidance: /[*]운영\/ 지도 계획\s*:\s*([\s\S]*?)(?=\n[*]목표 성과물|$)/,
+        targetOutcomes: /[*]목표\s*성과물\s*:\s*([\s\S]*?)(?=$)/,
+    };
+
+    for (const [key, regex] of Object.entries(patterns)) {
+        const match = details.match(regex);
+        if (match && match[1]) {
+            result[key] = match[1].trim();
+        }
+    }
+
+    return result;
 }

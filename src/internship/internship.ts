@@ -35,7 +35,7 @@ export function parseSelectionInfo(selectionInfo: string): number[] {
  */
 export function parseInternshipPeriod(period: string): Record<string, string> {
     const [start, end] = period.split("~").map((v) => v.trim());
-    return { startDate: start, endDate: end };
+    return {startDate: start, endDate: end};
 }
 
 /**
@@ -147,7 +147,30 @@ export function cleanCurrency(value: string): { period: string; amount: number }
     if (match) {
         const period = match[1] || "월";
         const amount = parseInt(match[2].replace(/,/g, ""), 10);
-        return { period, amount };
+        return {period, amount};
     }
-    return { period: "월", amount: 0 };
+    return {period: "월", amount: 0};
+}
+
+/**
+ * Parses the internship season details from an input string.
+ *
+ * This function extracts the year, semester, and program type (short-term or long-term)
+ * from a given input. It returns an object containing:
+ * - `year` (number): The year of the internship.
+ * - `semester` (string): The semester (e.g., "1학기").
+ * - `programType` (string): The type of internship (short-term or long-term).
+ *
+ * @param transformedData
+ * @param {string} input - The input string with internship details.
+ * @returns {Object} - An object with `year`, `semester`, and `programType`.
+ */
+export function handleInternshipName(transformedData: Record<string, any>, input: string): void {
+    const yearMatch = input.match(/(\d{4})년도/);
+    const semesterMatch = input.match(/(1학기|여름학기|2학기|겨울학기)/);
+    const programTypeMatch = input.match(/(단기|장기)\s*현장실습/);
+
+    if (yearMatch) transformedData['year'] = parseInt(yearMatch[1], 10);
+    if (semesterMatch) transformedData['semester'] = semesterMatch[1];
+    if (programTypeMatch) transformedData['programType'] = programTypeMatch[1];
 }

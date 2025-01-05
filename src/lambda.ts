@@ -82,6 +82,12 @@ export function transformData(data: Record<string, any>): Record<string, any> {
             case "workingDays":
                 transformedData[newKey] = parseWorkingDays(value);
                 break;
+            case "selectionInfo":
+                transformedData[newKey] = parseSelectionInfo(value);
+                break;
+            default:
+                transformedData[newKey] = cleanGenericValue(value);
+                break;
         }
     }
 
@@ -565,6 +571,30 @@ function parseWorkingDays(value: string): string[] {
  */
 function parseStatus(status: string): boolean {
     return status.trim() !== "접수마감";
+}
+
+/**
+ * Parses selection information to extract applicable grade levels.
+ *
+ * The function checks if the input string includes the term "무관", in which case it returns all grade levels
+ * (1, 2, 3, 4). If the string contains specific grade information (e.g., "1학년, 2학년"), it extracts and
+ * returns the corresponding numeric values. If no grade information is found, it returns an empty array.
+ *
+ * @param {string} selectionInfo - The input string containing the selection information to be parsed.
+ * @returns {number[]} - An array of applicable grade levels as numbers, or an empty array if no grades are found.
+ */
+function parseSelectionInfo(selectionInfo: string): number[] {
+    if (selectionInfo.includes("무관")) {
+        return [1, 2, 3, 4];
+    }
+
+    const gradeMatch = selectionInfo.match(/(\d+(?:,\d+)*학년)/);
+
+    if (!gradeMatch) {
+        return [];
+    }
+
+    return gradeMatch[1].replace(/학년/g, '').split(',').map(Number);
 }
 
 /**

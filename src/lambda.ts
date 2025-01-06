@@ -25,11 +25,10 @@ export const handler: SQSHandler = async (event) => {
             console.log(`Processing file from S3: Bucket=${bucketName}, Key=${key}`);
 
             const jsonData = await getS3File(bucketName, key);
-            const crawledData = JSON.parse(jsonData);
 
-            console.log("Crawled Data:", crawledData);
+            console.log("Crawled Data:", jsonData);
 
-            const transformedData = crawledData.map(transformData);
+            const transformedData = jsonData.map(transformData);
 
             await saveToDynamoDB(transformedData);
             // await saveToElasticsearch(transformedData);

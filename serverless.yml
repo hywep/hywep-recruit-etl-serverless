@@ -55,7 +55,7 @@ custom:
 
 functions:
   process:
-    handler: src/lambda.handler
+    handler: dist/lambda.handler
     timeout: 600
     memorySize: 1024
     events:

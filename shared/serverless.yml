@@ -1,0 +1,101 @@
+service: hywep-resources
+
+provider:
+  name: aws
+  region: ap-northeast-2
+  stackName: hywep-resources
+
+resources:
+  Resources:
+    HywepVPC:
+      Type: AWS::EC2::VPC
+      Properties:
+        CidrBlock: 10.0.0.0/16
+        EnableDnsSupport: true
+        EnableDnsHostnames: true
+        Tags:
+          - Key: Name
+            Value: HywepVPC
+
+    HywepInternetGateway:
+      Type: AWS::EC2::InternetGateway
+      Properties:
+        Tags:
+          - Key: Name
+            Value: HywepInternetGateway
+
+    HywepVPCGatewayAttachment:
+      Type: AWS::EC2::VPCGatewayAttachment
+      Properties:
+        VpcId: !Ref HywepVPC
+        InternetGatewayId: !Ref HywepInternetGateway
+
+    HywepPublicSubnet:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !Ref HywepVPC
+        CidrBlock: 10.0.1.0/24
+        MapPublicIpOnLaunch: true
+        AvailabilityZone: ap-northeast-2a
+        Tags:
+          - Key: Name
+            Value: HywepPublicSubnet
+
+    HywepPrivateSubnet:
+      Type: AWS::EC2::Subnet
+      Properties:
+        VpcId: !Ref HywepVPC
+        CidrBlock: 10.0.2.0/24
+        MapPublicIpOnLaunch: false
+        AvailabilityZone: ap-northeast-2a
+        Tags:
+          - Key: Name
+            Value: HywepPrivateSubnet
+
+    HywepElasticIP:
+      Type: AWS::EC2::EIP
+      Properties:
+        Domain: vpc
+        Tags:
+          - Key: Name
+            Value: HywepElasticIP
+
+    HywepNATGateway:
+      Type: AWS::EC2::NatGateway
+      Properties:
+        AllocationId: !GetAtt HywepElasticIP.AllocationId
+        SubnetId: !Ref HywepPublicSubnet
+        Tags:
+          - Key: Name
+            Value: HywepNATGateway
+
+  Outputs:
+    VPCId:
+      Value: !Ref HywepVPC
+      Export:
+        Name: Hywep-VPCId
+
+    InternetGatewayId:
+      Value: !Ref HywepInternetGateway
+      Export:
+        Name: Hywep-InternetGatewayId
+
+    PublicSubnetId:
+      Value: !Ref HywepPublicSubnet
+      Export:
+        Name: Hywep-PublicSubnetId
+
+    PrivateSubnetId:
+      Value: !Ref HywepPrivateSubnet
+      Export:
+        Name: Hywep-PrivateSubnetId
+
+    ElasticIPId:
+      Value: !GetAtt HywepElasticIP.AllocationId
+      Export:
+        Name: Hywep-ElasticIPId
+
+    NATGatewayId:
+      Value: !Ref HywepNATGateway
+      Export:
+        Name: Hywep-NATGatewayId

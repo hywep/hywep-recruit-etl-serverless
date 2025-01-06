@@ -1,8 +1,7 @@
 import {SQSHandler} from "aws-lambda";
 import {EXCLUDE_KEYS, INVALID_VALUES, KEY_MAPPING} from "./constants";
-import {saveToElasticsearch} from "./aws/elasticsearch";
 import {saveToDynamoDB} from "./aws/dynamo";
-import {getS3File, saveToS3} from "./aws/s3";
+import {getS3File} from "./aws/s3";
 import {handleMajors, handleQualifications} from "./major/major";
 import {normalizeDeadlineTime} from "./util/date";
 import {handleWorkingHours, parseWorkingDays} from "./work/work";
@@ -32,11 +31,8 @@ export const handler: SQSHandler = async (event) => {
 
             const transformedData = crawledData.map(transformData);
 
-            const processedKey = key.replace("raw-data", "processed-data");
-            await saveToS3(bucketName, processedKey, transformedData);
-
             await saveToDynamoDB(transformedData);
-            await saveToElasticsearch(transformedData);
+            // await saveToElasticsearch(transformedData);
         }
     } catch (error) {
         console.error("Error processing SQS event:", error);

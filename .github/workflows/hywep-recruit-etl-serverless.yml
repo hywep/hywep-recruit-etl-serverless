@@ -26,6 +26,10 @@ jobs:
         run: |
           npm install serverless@3 -g
           npm install
+          
+      - name: Build Project
+        run: |
+          npm run build
 
       # Deploy to Lambda
       - name: Deploy to Lambda

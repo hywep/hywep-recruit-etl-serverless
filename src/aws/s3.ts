@@ -3,7 +3,7 @@ import stream from "stream";
 
 const s3Client = new S3Client();
 
-export async function getS3File(bucketName: string, key: string): Promise<string> {
+export async function getS3File(bucketName: string, key: string): Promise<any> {
     const s3Object = await s3Client.send(
         new GetObjectCommand({Bucket: bucketName, Key: key})
     );

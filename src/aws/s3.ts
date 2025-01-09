@@ -5,9 +5,11 @@ const s3Client = new S3Client();
 
 export async function getS3File(bucketName: string, key: string): Promise<string> {
     const s3Object = await s3Client.send(
-        new GetObjectCommand({ Bucket: bucketName, Key: key })
+        new GetObjectCommand({Bucket: bucketName, Key: key})
     );
-    return streamToString(s3Object.Body as stream.Readable);
+    const rawData = await streamToString(s3Object.Body as stream.Readable);
+
+    return JSON.parse(rawData);
 }
 
 export async function saveToS3(bucketName: string, key: string, data: any): Promise<void> {

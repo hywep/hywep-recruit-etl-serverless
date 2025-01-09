@@ -14,6 +14,7 @@ export function handleMajors(value: string): string[] {
     const majors = parseMajors(value);
     return findRelatedMajor(majors);
 }
+
 /**
  * Parses a selection string to extract a list of majors.
  *
@@ -45,9 +46,9 @@ export function parseMajors(selection: string): string[] {
     });
 
     const bulletPointRegex = /[-•*]\s*/g;
-    selection = selection.replace(bulletPointRegex, "");
+    selection = selection.replace(bulletPointRegex, " ");
 
-    const separators = /,|\/| 및 |\u2219|\n/;
+    const separators = /,|\/| 및 |\u2219|\n|\s+/;
 
     const cleanedMajors = selection
         .split(separators)
@@ -55,7 +56,7 @@ export function parseMajors(selection: string): string[] {
             return item
                 .split(/등|관련/)[0]
                 .replace(/\(|\)/g, "")
-                .trim();
+                .trim()
         })
         .filter((item) => item.length > 0 && !['학과, 학부, 과'].includes(item) && item !== '+ 창업');
 
@@ -181,8 +182,7 @@ export function handleQualifications(transformedData: Record<string, any>, value
     ) {
         const qualifications = transformedData["qualifications"];
         if (qualifications && Array.isArray(qualifications.major)) {
-            transformedData["majors"] = qualifications.major;
-            transformedData["systemMajors"] = findRelatedMajor(qualifications.major);
+            transformedData["majors"] = findRelatedMajor(qualifications.major);
         }
     }
 }
@@ -213,7 +213,7 @@ export function parseQualifications(input) {
         const match = input.match(regex);
         if (match && match[1]) {
             let value = match[1].trim();
-            if (key === 'major'){
+            if (key === 'major') {
                 value = parseMajors(value);
             }
             result[key] = value;

@@ -6,10 +6,6 @@ provider:
   region: ap-northeast-2
   environment:
     RECRUIT_TABLE: ${self:custom.dynamoTableNames.${opt:stage, 'dev'}}
-    VPC_ID: ${cf:hywep-resources.VPCId}
-    PUBLIC_SUBNET_ID: ${cf:hywep-resources.PublicSubnetId}
-    PRIVATE_SUBNET_ID: ${cf:hywep-resources.PrivateSubnetId}
-    NAT_GATEWAY_ID: ${cf:hywep-resources.NATGatewayId}
   iamRoleStatements:
     - Effect: Allow
       Action:

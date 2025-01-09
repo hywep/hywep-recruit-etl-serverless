@@ -12,6 +12,7 @@ import {
     handleInterviewInfo,
     parseInternshipDetails,
     parseInternshipPeriod,
+    parseOrganizationName,
     parseSelectionInfo,
     parseStatus
 } from "./internship/internship";
@@ -25,8 +26,6 @@ export const handler: SQSHandler = async (event) => {
             console.log(`Processing file from S3: Bucket=${bucketName}, Key=${key}`);
 
             const jsonData = await getS3File(bucketName, key);
-
-            console.log("Crawled Data:", jsonData);
 
             const transformedData = jsonData.map(transformData);
 
@@ -95,6 +94,9 @@ export function transformData(data: Record<string, any>): Record<string, any> {
                 break;
             case "id":
                 transformedData[newKey] = parseInt(value);
+                break;
+            case "organizationName":
+                transformedData[newKey] = parseOrganizationName(value);
                 break;
             default:
                 transformedData[newKey] = cleanGenericValue(value);

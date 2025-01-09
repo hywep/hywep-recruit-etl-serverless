@@ -174,3 +174,7 @@ export function handleInternshipName(transformedData: Record<string, any>, input
     if (semesterMatch) transformedData['semester'] = semesterMatch[1];
     if (programTypeMatch) transformedData['programType'] = programTypeMatch[1];
 }
+
+export function parseOrganizationName(value: string) {
+    return value.split('/')[0].trim();
+}

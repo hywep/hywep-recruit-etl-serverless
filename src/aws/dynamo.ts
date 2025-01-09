@@ -4,10 +4,6 @@ import {marshall} from "@aws-sdk/util-dynamodb";
 const dynamoClient = new DynamoDBClient({region: "ap-northeast-2"});
 
 export async function saveToDynamoDB(data: any[]): Promise<void> {
-    if (!process.env.RECRUIT_TABLE) {
-        throw new Error("Environment variable RECRUIT_TABLE is not set.");
-    }
-
     for (const item of data) {
 
         if (typeof item.id === "string") {
@@ -18,8 +14,6 @@ export async function saveToDynamoDB(data: any[]): Promise<void> {
                 throw new Error(`Invalid id value: ${item.id}`);
             }
         }
-
-        console.log(item);
 
         const params = {
             TableName: process.env.RECRUIT_TABLE,

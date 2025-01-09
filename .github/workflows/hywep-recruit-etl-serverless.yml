@@ -1,0 +1,48 @@
+name: Deploy to AWS Lambda
+
+on:
+  push:
+    branches:
+      - main
+      - qa
+      - develop
+
+jobs:
+  deploy:
+    name: Auto Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+
+      # Install Dependencies
+      - name: Install Dependencies
+        run: |
+          npm install serverless@3 -g
+          npm install
+          
+      - name: Build Project
+        run: |
+          npm run build
+
+      # Deploy to Lambda
+      - name: Deploy to Lambda
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
+            sls deploy --stage dev
+          elif [ "${{ github.ref }}" == "refs/heads/qa" ]; then
+            sls deploy --stage qa
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            sls deploy --stage prod
+          fi
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          ELASTICSEARCH_ENDPOINT: ${{ secrets.ELASTICSEARCH_ENDPOINT }}

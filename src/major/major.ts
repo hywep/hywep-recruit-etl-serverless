@@ -79,7 +79,7 @@ export function findRelatedMajor(inputs: string[]): string[] {
 
     const flatInputs = inputs
         .flatMap((input) => input.split(/[,\s]+/))
-        .map((str) => str.replace(/학과|학부|전공|학/g, "").trim().toLowerCase())
+        .map((str) => str.replace(/학과|학부|전공|학/g, "").trim())
         .filter((str) => str.length > 0);
 
     const allMajors = new Set<string>();
@@ -91,7 +91,7 @@ export function findRelatedMajor(inputs: string[]): string[] {
         let bestDistance = Infinity;
 
         for (const major of allMajors) {
-            const normalizedMajor = major.replace(/학과|학부|전공/g, "").toLowerCase();
+            const normalizedMajor = major.replace(/학과|학부|전공/g, "");
             const distance = levenshtein.distance(input, normalizedMajor);
 
             if (distance < bestDistance && distance <= 1) {

@@ -58,7 +58,7 @@ export function parseMajors(selection: string): string[] {
                 .replace(/\(|\)/g, "")
                 .trim()
         })
-        .filter((item) => (item.length > 0 && !['계열', '학과, 학부, 과'].includes(item) && item !== '+ 창업'));
+        .filter((item) => (item.length > 0 && !['전체', '계열', '학과, 학부, 과'].includes(item) && item !== '+ 창업'));
 
     return [...extractedSpecials, ...cleanedMajors];
 }

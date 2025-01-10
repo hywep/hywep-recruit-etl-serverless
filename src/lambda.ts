@@ -60,7 +60,7 @@ export function transformData(data: Record<string, any>): Record<string, any> {
                 transformedData[newKey] = normalizeDeadlineTime(value);
                 break;
             case "majors":
-                transformedData['announcedMajor'] = value;
+                transformedData['announcedMajors'] = value;
                 transformedData[newKey] = handleMajors(value);
                 break;
             case "qualifications":

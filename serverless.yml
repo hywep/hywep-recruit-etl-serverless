@@ -1,11 +1,17 @@
 service: hywep-recruit-etl
 
+plugins:
+  - serverless-plugin-datadog
+
 provider:
   name: aws
   runtime: nodejs20.x
   region: ap-northeast-2
   environment:
     RECRUIT_TABLE: ${self:custom.dynamoTableNames.${opt:stage, 'dev'}}
+    DATADOG_API_KEY: ${env:DATADOG_API_KEY}
+    DATADOG_APP_KEY: ${env:DATADOG_APP_KEY}
+    DATADOG_SITE: ${env:DATADOG_SITE}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -48,6 +54,28 @@ custom:
     dev: hywep-recruit-es-dev
     qa: hywep-recruit-es-qa
     prod: hywep-recruit-es-prod
+  datadog:
+    site: ${env:DATADOG_SITE}
+    enableXrayTracing: false
+    enableDDTracing: true
+    enableDDLogs: true
+    subscribeToAccessLogs: true
+    exclude:
+      - dd-excluded-function
+    addLayers: true
+    monitors:
+      - high_error_rate:
+          name: "High Error Rate with Modified Warning Threshold"
+          message: "More than 10% of the function’s invocations were errors in the selected time range. Notify @data.dog@datadoghq.com @slack-serverless-monitors"
+          tags: [ "modified_error_rate", "serverless", "error_rate" ]
+          require_full_window: true
+          priority: 2
+          options:
+            include_tags: true
+            notify_audit: true
+            thresholds:
+              warning: 0.05
+              critical: 0.1
 
 functions:
   process:

@@ -22,14 +22,6 @@ provider:
         - dynamodb:Query
       Resource:
         - arn:aws:dynamodb:ap-northeast-2:${env:AWS_ACCOUNT_ID}:table/${self:custom.dynamoTableNames.${opt:stage, 'dev'}}
-    - Effect: Allow
-      Action:
-        - sqs:SendMessage
-        - sqs:ReceiveMessage
-        - sqs:DeleteMessage
-        - sqs:GetQueueAttributes
-      Resource:
-        - arn:aws:sqs:ap-northeast-2:${env:AWS_ACCOUNT_ID}:${self:custom.queueNames.${opt:stage, 'dev'}}
 
 custom:
   s3BucketNames:
@@ -40,14 +32,6 @@ custom:
     dev: hywep-recruit-dev
     qa: hywep-recruit-qa
     prod: hywep-recruit-prod
-  queueNames:
-    dev: hywep-recruit-queue-dev
-    qa: hywep-recruit-queue-qa
-    prod: hywep-recruit-queue-prod
-  elasticsearchDomainName:
-    dev: hywep-recruit-es-dev
-    qa: hywep-recruit-es-qa
-    prod: hywep-recruit-es-prod
 
 functions:
   process:
@@ -55,9 +39,12 @@ functions:
     timeout: 600
     memorySize: 1024
     events:
-      - sqs:
-          arn: arn:aws:sqs:ap-northeast-2:${env:AWS_ACCOUNT_ID}:${self:custom.queueNames.${opt:stage, 'dev'}}
-          batchSize: 10
+      - s3:
+          bucket: ${self:custom.s3BucketNames.${opt:stage, 'dev'}}
+          event: s3:ObjectCreated:*
+          existing: true
+          rules:
+            - suffix: .json
 
 resources:
   Resources:

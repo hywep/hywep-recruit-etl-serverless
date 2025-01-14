@@ -1,4 +1,4 @@
-import {SQSHandler} from "aws-lambda";
+import {S3Handler} from "aws-lambda";
 import {EXCLUDE_KEYS, INVALID_VALUES, KEY_MAPPING} from "./constants";
 import {saveToDynamoDB} from "./aws/dynamo";
 import {getS3File} from "./aws/s3";
@@ -17,11 +17,11 @@ import {
     parseStatus
 } from "./internship/internship";
 
-export const handler: SQSHandler = async (event) => {
+export const handler: S3Handler = async (event) => {
     try {
         for (const record of event.Records) {
-            const messageBody = JSON.parse(record.body);
-            const {bucketName, key} = messageBody;
+            const bucketName = record.s3.bucket.name;
+            const key = decodeURIComponent(record.s3.object.key.replace(/\+/g, " "));
 
             console.log(`Processing file from S3: Bucket=${bucketName}, Key=${key}`);
 
@@ -30,7 +30,6 @@ export const handler: SQSHandler = async (event) => {
             const transformedData = jsonData.map(transformData);
 
             await saveToDynamoDB(transformedData);
-            // await saveToElasticsearch(transformedData);
         }
     } catch (error) {
         console.error("Error processing SQS event:", error);

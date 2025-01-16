@@ -47,7 +47,7 @@ export const handler: S3Handler = async (event) => {
 export function transformData(data: Record<string, any>): Record<string, any> {
     const transformedData: Record<string, any> = {};
 
-    for (const [key, value] of Object.entries(data)) {
+    for (let [key, value] of Object.entries(data)) {
         const newKey = KEY_MAPPING[key] || key;
 
         if (EXCLUDE_KEYS.includes(newKey) || INVALID_VALUES.includes(value)) {
@@ -59,6 +59,9 @@ export function transformData(data: Record<string, any>): Record<string, any> {
                 transformedData[newKey] = normalizeDeadlineTime(value);
                 break;
             case "majors":
+                if (transformedData['organizationName'].includes('삼성전자')) {
+                    value = '이공계열';
+                }
                 transformedData['announcedMajors'] = value;
                 transformedData[newKey] = handleMajors(value);
                 break;
